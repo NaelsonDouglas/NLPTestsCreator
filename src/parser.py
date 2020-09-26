@@ -1,10 +1,29 @@
 import re
 
-_regex = r'((public|private|protected)+(\s)*(static|final|abstract)*(\s)*(boolean|byte|char|short|int|long|float|double)(\s)*(.*\(.*\)))'
-def get_contract(code_string,regex=_regex):
-        return re.search(regex,code_string)
+def get_contract(code_string):
+        #https://regex101.com/r/2l2ziE/5
+        regex = r'((public|private|protected)+(\s)*(static|final|abstract)*(\s)*(boolean|byte|char|short|int|long|float|double)(\s)*(.*\(.*\)))'
+        result = re.search(regex,code_string)
+        if result != None:
+                result = result.group(1)
+        return result
 
+def get_parameters(method_contract):
+        #https://regex101.com/r/1tXDw3/4
+        regex = r'((\()(((\s*)(boolean|byte|char|short|int|long|float|double))(\s*)(\w*)(\,*))*(\)))'
+        result = re.search(regex,method_contract)
+        if result != None:
+                result = result.group(1).replace('(','').replace(')','')
+        return result
 
+def split_parameters(parameters_string):
+        regex = r'((boolean|byte|char|short|int|long|float|double)(\s+)(\w*))'
+        result = re.findall(regex,parameters_string)
+        only_fst_group = []
+        for r in result:
+                type_id_tuple = tuple(r[0].split(' '))
+                only_fst_group.append(type_id_tuple)
+        return  only_fst_group
 
 f = open('Math.java')
 t = f.read()
@@ -21,8 +40,11 @@ for chunk in chunks:
                 print('----------')
                 contract = get_contract(parts[1])
                 if (contract != None):
-                        blocks.append((parts[0],contract.group(1)))
+                        blocks.append((parts[0],contract))
 
 for b in blocks:
-        print(b[1])
+        result = get_parameters(b[1])
+        result = split_parameters(result)
+        print(result)
         print('-------------')
+
