@@ -25,26 +25,43 @@ def split_parameters(parameters_string):
                 only_fst_group.append(type_id_tuple)
         return  only_fst_group
 
+def get_method_name(method_contract):
+        regex = r'(\w*(?=\())'
+        result = re.search(regex,method_contract).group(1)
+        return result
+
+def get_chunks(full_code):
+        chunks =  t.split('/**')
+        return chunks
+
+
+def get_blocks(chunks):
+        blocks = []
+        for chunk in chunks:
+                parts = chunk.split('*/\n')
+                if len(parts) >=2:
+                        javadoc = parts[0]
+                        contract = get_contract(parts[1])
+                        if (contract != None):
+                                blocks.append((parts[0],contract))
+        return blocks
+
+def unzip_methods(blocks):
+        methods = []
+        for b in blocks:
+                method = {}
+                unsplited_parameters = get_parameters(b[1])
+                if unsplited_parameters != None:
+                        method['method'] = get_method_name(b[1])
+                        method['parameters'] = split_parameters(unsplited_parameters)
+                        method['javadoc'] = b[0]
+                        methods.append(method)
+        return methods
+
 f = open('Math.java')
 t = f.read()
 f.close()
-chunks =  t.split('/**')
 
-blocks = []
-for chunk in chunks:
-        parts = chunk.split('*/\n')
-        if len(parts) >=2:
-                print(parts[0])
-                print('\n\n')
-                print(parts[1])
-                print('----------')
-                contract = get_contract(parts[1])
-                if (contract != None):
-                        blocks.append((parts[0],contract))
-
-for b in blocks:
-        result = get_parameters(b[1])
-        result = split_parameters(result)
-        print(result)
-        print('-------------')
-
+chunks = get_chunks(t)
+blocks = get_blocks(chunks)
+methods = unzip_methods(blocks)
