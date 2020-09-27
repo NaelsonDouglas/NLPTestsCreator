@@ -52,7 +52,6 @@ class ClassTokenizer:
                 chunks =  code_text.split('/**')
                 return chunks
 
-
         def get_blocks(self, chunks):
                 blocks = []
                 for chunk in chunks:
@@ -63,6 +62,22 @@ class ClassTokenizer:
                                 if (contract != None):
                                         blocks.append((parts[0],contract))
                 return blocks
+        def get_exceptions(self, javadoc):
+                #https://regex101.com/r/2l2ziE/6
+                regex = r'(@throws \w* if .*)'
+                exceptions_strings = re.findall(regex,javadoc)
+                #https://regex101.com/r/2l2ziE/8
+                condition_regex = r'((?<=(if\s)).*)'
+                throws_exception_regex = r'@throws\s\w+Exception'
+
+                result = []
+                for es in exceptions_strings:
+                        exception = re.search(throws_exception_regex,es).group(0)
+                        exception = exception.split(' ')[1]
+                        condition = re.search(condition_regex,es).group(1)
+                        result.append((condition,exception))
+
+                return result
 
         def unzip_methods(self, blocks):
                 methods = []
@@ -74,7 +89,9 @@ class ClassTokenizer:
                                 method['return_type'] = self.get_return_type(b[1])
                                 method['method'] = self.get_method_name(b[1])
                                 method['parameters'] = self.split_parameters(unsplited_parameters)
+                                method['exceptions'] = self.get_exceptions(b[0])
                                 method['javadoc'] = b[0]
+
                                 methods.append(method)
                 return methods
 
@@ -83,13 +100,3 @@ class ClassTokenizer:
                 text = f.read()
                 f.close()
                 return text
-
-tokenizer = ClassTokenizer()
-code_text = tokenizer.read_class()
-chunks = tokenizer.get_chunks(code_text)
-blocks = tokenizer.get_blocks(chunks)
-methods = tokenizer.methods = tokenizer.unzip_methods(blocks)
-
-for m in methods:
-        for k in m.keys():
-                print('[{}][]: {}'.format(str(k),str(m[k])))
