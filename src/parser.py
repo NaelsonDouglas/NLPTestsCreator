@@ -26,6 +26,23 @@ class ClassTokenizer:
                         only_fst_group.append(type_id_tuple)
                 return  only_fst_group
 
+        def get_modifiers(self, method_contract):
+                regex = r'((public|private|protected)(\s)*(static*)(\s*)(boolean|byte|char|short|int|long|float|double))'
+                result = re.search(regex,method_contract)
+                if result != None:
+                        modifiers = result.group(1).split(' ')
+                        modifiers = modifiers[0:len(modifiers)-1]
+                        result = modifiers
+                return result
+
+        def get_return_type(self, method_contract):
+                regex = r'((public|private|protected)(\s)*(static*)(\s*)(boolean|byte|char|short|int|long|float|double))'
+                result = re.search(regex,method_contract)
+                if result != None:
+                        itens = result.group(1).split(' ')
+                        result = itens[len(itens)-1]
+                return result
+
         def get_method_name(self, method_contract):
                 regex = r'(\w*(?=\())'
                 result = re.search(regex,method_contract).group(1)
@@ -52,7 +69,9 @@ class ClassTokenizer:
                 for b in blocks:
                         method = {}
                         unsplited_parameters = self.get_parameters(b[1])
-                        if unsplited_parameters != None:
+                        if unsplited_parameters != None and '@throws' in b[0]:
+                                method['modifiers'] = self.get_modifiers(b[1])
+                                method['return_type'] = self.get_return_type(b[1])
                                 method['method'] = self.get_method_name(b[1])
                                 method['parameters'] = self.split_parameters(unsplited_parameters)
                                 method['javadoc'] = b[0]
@@ -70,3 +89,7 @@ code_text = tokenizer.read_class()
 chunks = tokenizer.get_chunks(code_text)
 blocks = tokenizer.get_blocks(chunks)
 methods = tokenizer.methods = tokenizer.unzip_methods(blocks)
+
+for m in methods:
+        for k in m.keys():
+                print('[{}][]: {}'.format(str(k),str(m[k])))
