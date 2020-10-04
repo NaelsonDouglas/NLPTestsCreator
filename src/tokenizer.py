@@ -1,13 +1,24 @@
 import re
+from word2number import w2n
 
-class ClassTokenizer:
-        def get_contract(self, code_string):
+class Tokenizer:
+        def get_contract(self, full_code_string):
                 #https://regex101.com/r/2l2ziE/5
                 regex = r'((public|private|protected)+(\s)*(static|final|abstract)*(\s)*(boolean|byte|char|short|int|long|float|double)(\s)*(.*\(.*\)))'
-                result = re.search(regex,code_string)
+                result = re.search(regex,full_code_string)
                 if result != None:
                         result = result.group(1)
                 return result
+
+        def get_var_name_on_single_line(self,doc):
+                regex_var_name = r'((?<=@code\s)\w+)'
+                var_name = re.search(regex_var_name,doc).group(0)
+                return var_name
+
+        def get_var_markers(self,javadoc):
+                regex_var_marker = r'({@code\s+\w+})'
+                var_markers = re.findall(regex_var_marker,javadoc)
+                return var_markers
 
         def get_parameters(self, method_contract):
                 #https://regex101.com/r/1tXDw3/4
@@ -57,11 +68,22 @@ class ClassTokenizer:
                 for chunk in chunks:
                         parts = chunk.split('*/\n')
                         if len(parts) >=2:
-                                javadoc = parts[0]
                                 contract = self.get_contract(parts[1])
                                 if (contract != None):
                                         blocks.append((parts[0],contract))
                 return blocks
+        def get_inlined_exception_name(self, line):
+                #https://regex101.com/r/2l2ziE/10
+                regex = r'((?<=@throws ).*Exception)'
+                exception_name = re.search(regex,line).group(0)
+                return exception_name
+
+        def get_inlined_right_value(self, line):
+                regex = r'((?<={@code y} is )\w*)'
+                value = re.search(regex,line).group(0)
+                value = str(w2n.word_to_num(value))
+                return value
+
         def get_exceptions(self, javadoc):
                 #https://regex101.com/r/2l2ziE/6
                 regex = r'(@throws \w* if .*)'
@@ -69,14 +91,13 @@ class ClassTokenizer:
                 #https://regex101.com/r/2l2ziE/8
                 condition_regex = r'((?<=(if\s)).*)'
                 throws_exception_regex = r'@throws\s\w+Exception'
-
                 result = []
                 for es in exceptions_strings:
                         exception = re.search(throws_exception_regex,es).group(0)
                         exception = exception.split(' ')[1]
                         condition = re.search(condition_regex,es).group(1)
+                        condition = condition#self.replace_variable_annotations(condition)
                         result.append((condition,exception))
-
                 return result
 
         def unzip_methods(self, blocks):
@@ -91,7 +112,6 @@ class ClassTokenizer:
                                 method['parameters'] = self.split_parameters(unsplited_parameters)
                                 method['exceptions'] = self.get_exceptions(b[0])
                                 method['javadoc'] = b[0]
-
                                 methods.append(method)
                 return methods
 

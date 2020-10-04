@@ -781,13 +781,6 @@ public final class Math {
      * @param y the second value
      * @return the result
      * @throws ArithmeticException if the result overflows an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
      * @since 1.8
      */
     public static int addExact(int x, int y) {
@@ -866,11 +859,6 @@ public final class Math {
      * @param y the second value
      * @return the result
      * @throws ArithmeticException if the result overflows an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
-     * @throws ArithmeticException if the result is not just like another an int
      * @since 1.8
      */
     public static int multiplyExact(int x, int y) {
